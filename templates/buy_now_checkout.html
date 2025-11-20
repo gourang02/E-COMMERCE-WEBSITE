@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Checkout - Optical Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 50px 0;
+    }
+    
+    .checkout-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .product-preview {
+        background: #f8fafc;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .product-preview img {
+        border-radius: 10px;
+        max-height: 200px;
+        object-fit: cover;
+    }
+    
+    .checkout-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .checkout-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 10px;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background: #e5e7eb;
+        color: #6b7280;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .checkout-step.active .step-number {
+        background: #2563eb;
+        color: white;
+    }
+    
+    .checkout-step.completed .step-number {
+        background: #10b981;
+        color: white;
+    }
+    
+    .price-breakdown {
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    
+    .total-price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2563eb;
+    }
+    
+    .StripeElement {
+        box-sizing: border-box;
+        height: 45px;
+        padding: 12px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .StripeElement--focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    .StripeElement--invalid {
+        border-color: #ef4444;
+    }
+    
+    .secure-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #dcfce7;
+        color: #166534;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="container">
+        <!-- Progress Steps -->
+        <div class="checkout-steps mb-5">
+            <div class="checkout-step completed">
+                <div class="step-number">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="text-white">Product Selected</div>
+            </div>
+            <div class="checkout-step active">
+                <div class="step-number">2</div>
+                <div class="text-white">Payment Details</div>
+            </div>
+            <div class="checkout-step">
+                <div class="step-number">3</div>
+                <div class="text-white">Order Complete</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left: Payment Form -->
+            <div class="col-lg-7 mb-4">
+                <div class="checkout-card p-4">
+                    <h2 class="mb-4">
+                        <i class="fas fa-credit-card text-primary"></i>
+                        Complete Your Purchase
+                    </h2>
+
+                    <!-- Product Preview -->
+                    <div class="product-preview">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <img src="{{ product.image_url or 'https://via.placeholder.com/200' }}" 
+                                     class="img-fluid" alt="{{ product.name }}">
+                            </div>
+                            <div class="col-md-8">
+                                <h4>{{ product.name }}</h4>
+                                <p class="text-muted mb-2">{{ product.category }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">Quantity: {{ quantity }}</span>
+                                    <span class="h4 text-primary mb-0">${{ "%.2f"|format(product.price) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form id="payment-form" class="mt-4">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user"></i> Cardholder Name
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="card-holder-name" 
+                                   placeholder="John Doe" 
+                                   required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-credit-card"></i> Card Details
+                            </label>
+                            <div id="card-element"></div>
+                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                        </div>
+
+                        <!-- Test Card Info -->
+                        <div class="alert alert-info">
+                            <h6 class="mb-2">
+                                <i class="fas fa-info-circle"></i> Test Card Numbers
+                            </h6>
+                            <small>
+                                <strong>Success:</strong> 4242 4242 4242 4242<br>
+                                <strong>Decline:</strong> 4000 0000 0000 0002<br>
+                                Use any future date and CVC
+                            </small>
+                        </div>
+
+                        <button type="submit" 
+                                class="btn btn-primary btn-lg w-100 mt-4" 
+                                id="submit-button">
+                            <span id="button-text">
+                                <i class="fas fa-lock"></i> 
+                                Pay ${{ "%.2f"|format(total) }}
+                            </span>
+                            <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span class="secure-badge">
+                            <i class="fas fa-shield-alt"></i>
+                            Secured by Stripe
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary -->
+            <div class="col-lg-5">
+                <div class="checkout-card p-4 sticky-top" style="top: 20px;">
+                    <h3 class="mb-4">
+                        <i class="fas fa-shopping-bag text-primary"></i>
+                        Order Summary
+                    </h3>
+
+                    <div class="price-breakdown">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Product Price:</span>
+                            <span>${{ "%.2f"|format(product.price) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Quantity:</span>
+                            <span>{{ quantity }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal:</span>
+                            <span>${{ "%.2f"|format(total) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Shipping:</span>
+                            <span class="text-success">FREE</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Tax (10%):</span>
+                            <span>${{ "%.2f"|format(total * 0.1) }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">Total:</span>
+                            <span class="total-price">${{ "%.2f"|format(total * 1.1) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="mt-4">
+                        <h5 class="mb-3">Why Buy From Us?</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                100% Authentic Products
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Free & Fast Shipping
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                30-Day Return Policy
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Secure Payment Gateway
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                24/7 Customer Support
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Money Back Guarantee -->
+                    <div class="text-center mt-4 p-3 bg-light rounded">
+                        <i class="fas fa-award text-warning fa-2x mb-2"></i>
+                        <h6 class="mb-1">Money Back Guarantee</h6>
+                        <small class="text-muted">100% satisfaction or full refund</small>
+                    </div>
+
+                    <!-- Continue Shopping -->
+                    <a href="{{ url_for('shop') }}" class="btn btn-outline-secondary w-100 mt-3">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe('{{ stripe_key }}');
+    const elements = stripe.elements();
+    const cardElement = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#1f2937',
+                '::placeholder': {
+                    color: '#9ca3af',
+                },
+            },
+        },
+    });
+    cardElement.mount('#card-element');
+
+    // Handle real-time validation errors
+    cardElement.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    // Handle form submission
+    const form = document.getElementById('payment-form');
+    const submitButton = document.getElementById('submit-button');
+    const buttonText = document.getElementById('button-text');
+    const spinner = document.getElementById('spinner');
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        submitButton.disabled = true;
+        buttonText.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        try {
+            // Create payment intent
+            const response = await fetch('/buy-now/create-payment-intent', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            const {clientSecret, error} = await response.json();
+            
+            if (error) {
+                throw new Error(error);
+            }
+
+            // Confirm payment
+            const {error: stripeError, paymentIntent} = await stripe.confirmCardPayment(
+                clientSecret,
+                {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: document.getElementById('card-holder-name').value
+                        }
+                    }
+                }
+            );
+
+            if (stripeError) {
+                document.getElementById('card-errors').textContent = stripeError.message;
+                submitButton.disabled = false;
+                buttonText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+            } else {
+                // Payment successful
+                const formData = new FormData();
+                formData.append('payment_intent_id', paymentIntent.id);
+                
+                const successResponse = await fetch('/buy-now/payment-success', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (successResponse.ok) {
+                    window.location.href = '/orders';
+                }
+            }
+        } catch (err) {
+            document.getElementById('card-errors').textContent = err.message;
+            submitButton.disabled = false;
+            buttonText.classList.remove('d-none');
+            spinner.classList.add('d-none');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{ super() }}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+    .payment-method {
+        display: none;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-top: 15px;
+        background-color: #f9f9f9;
+    }
+    .payment-method.active {
+        display: block;
+    }
+    .razorpay-payment-button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .razorpay-payment-button:hover {
+        background-color: #45a049;
+    }
+    #payment-status {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+        display: none;
+    }
+    .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .payment-options {
+        margin: 15px 0;
+    }
+    .payment-option {
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Billing Details</h4>
+                </div>
+                <div class="card-body">
+                    <form id="checkout-form" method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Delivery Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pincode" class="form-label">Pincode</label>
+                                <input type="text" class="form-control" id="pincode" name="pincode" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Payment Method</label>
+                            <div class="payment-method-selector mb-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" checked>
+                                    <label class="form-check-label" for="cod">
+                                        <i class="fas fa-money-bill-wave me-2"></i> Cash on Delivery
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="online" value="online">
+                                    <label class="form-check-label" for="online">
+                                        <i class="fas fa-credit-card me-2"></i> Pay Online (Credit/Debit Card)
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Razorpay Payment Section -->
+                            <div id="online-payment" class="payment-method">
+                                <div class="payment-options">
+                                    <p>Pay securely using Razorpay</p>
+                                    <div id="razorpay-button" class="razorpay-payment-button">Pay Now</div>
+                                </div>
+                                <div id="payment-status"></div>
+                                <p class="text-muted small mt-2">
+                                    <i class="fas fa-lock me-1"></i> Your payment is secure and encrypted
+                                </p>
+                            </div>
+                            
+                            <!-- COD Payment Section -->
+                            <div id="cod-payment" class="payment-method active p-3 border rounded bg-light">
+                                <p class="mb-2"><i class="fas fa-info-circle me-2 text-primary"></i> Pay with cash upon delivery</p>
+                                <p class="small text-muted mb-0">Please have exact change ready for the delivery person</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden input for payment intent ID -->
+                        <input type="hidden" id="payment_intent_id" name="payment_intent_id" value="">
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="submit-button">
+                            <span id="button-text">Place Order</span>
+                            <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if products %}
+                        {% for product_id, item in products.items() %}
+                            {% set item_total = item.price * item.quantity %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    {{ item.name }} x {{ item.quantity }}
+                                </div>
+                                <div>₹{{ "%.2f"|format(item_total) }}</div>
+                            </div>
+                        {% endfor %}
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <div>Total</div>
+                            <div>₹{{ "%.2f"|format(total) }}</div>
+                        </div>
+                    {% else %}
+                        <p>Your cart is empty</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checkout-form');
+        const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
+        const onlinePaymentSection = document.getElementById('online-payment');
+        const codPaymentSection = document.getElementById('cod-payment');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+        const paymentStatus = document.getElementById('payment-status');
+        
+        // Handle payment method change
+        function handlePaymentMethodChange() {
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            
+            if (paymentMethod === 'online') {
+                onlinePaymentSection.classList.add('active');
+                codPaymentSection.classList.remove('active');
+                submitButton.style.display = 'none';
+            } else {
+                onlinePaymentSection.classList.remove('active');
+                codPaymentSection.classList.add('active');
+                submitButton.style.display = 'block';
+            }
+        }
+        
+        // Initialize on page load
+        handlePaymentMethodChange();
+        
+        // Handle payment method change
+        paymentMethodRadios.forEach(radio => {
+            radio.addEventListener('change', handlePaymentMethodChange);
+        });
+        
+        // Razorpay Payment Handler
+        document.getElementById('razorpay-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+            
+            const options = {
+                key: '{{ razorpay_key }}',
+                amount: {{ amount }},
+                currency: 'INR',
+                name: 'Opticals Store',
+                description: 'Order Payment',
+                image: '{{ url_for('static', filename='img/logo.png') }}',
+                order_id: '{{ razorpay_order_id }}',
+                handler: function(response) {
+                    // Handle successful payment
+                    handlePaymentSuccess(response);
+                },
+                prefill: {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    contact: document.getElementById('phone').value
+                },
+                notes: {
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    pincode: document.getElementById('pincode').value
+                },
+                theme: {
+                    color: '#3399cc'
+                }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function(response) {
+                showPaymentStatus('Payment failed. Please try again.', 'error');
+            });
+            
+            rzp.open();
+        });
+        
+        // Handle form submission for COD
+        form.addEventListener('submit', async function(e) {
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            
+            if (paymentMethod === 'online') {
+                e.preventDefault();
+                return;
+            }
+            
+            // For COD, just submit the form normally
+            if (!validateForm()) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Show loading state
+            submitButton.disabled = true;
+            buttonText.textContent = 'Placing Order...';
+            spinner.classList.remove('d-none');
+        });
+        
+        // Form validation
+        function validateForm() {
+            const requiredFields = ['name', 'email', 'phone', 'address', 'city', 'pincode'];
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (!element.value.trim()) {
+                    element.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    element.classList.remove('is-invalid');
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Show payment status message
+        function showPaymentStatus(message, type) {
+            paymentStatus.textContent = message;
+            paymentStatus.className = type;
+            paymentStatus.style.display = 'block';
+            
+            // Scroll to status message
+            paymentStatus.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Handle successful payment
+        async function handlePaymentSuccess(response) {
+            showPaymentStatus('Processing your order...', 'success');
+            
+            try {
+                // Verify payment with server
+                const verificationResponse = await fetch('/verify_payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        address: document.getElementById('address').value,
+                        city: document.getElementById('city').value,
+                        pincode: document.getElementById('pincode').value
+                    })
+                });
+                
+                const result = await verificationResponse.json();
+                
+                if (result.success) {
+                    // Redirect to orders page on success
+                    window.location.href = result.redirect;
+                } else {
+                    throw new Error(result.error || 'Payment verification failed');
+                }
+            } catch (error) {
+                console.error('Payment verification error:', error);
+                showPaymentStatus(error.message || 'An error occurred. Please contact support.', 'error');
+                
+                // Re-enable the submit button
+                submitButton.disabled = false;
+                buttonText.textContent = 'Place Order';
+                spinner.classList.add('d-none');
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Order Successful - Optical Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        min-height: 100vh;
+        padding: 50px 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .success-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 50px;
+        text-center;
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: #dcfce7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: scaleIn 0.5s ease-out 0.3s both;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+    
+    .success-icon i {
+        font-size: 50px;
+        color: #10b981;
+    }
+    
+    .order-details {
+        background: #f8fafc;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #2563eb;
+        position: absolute;
+        animation: confetti-fall 3s linear;
+    }
+    
+    @keyframes confetti-fall {
+        to {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="success-card">
+                    <!-- Success Icon -->
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+
+                    <!-- Success Message -->
+                    <h1 class="display-4 fw-bold text-success mb-3">
+                        Order Successful!
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Thank you for your purchase. Your order has been confirmed.
+                    </p>
+
+                    <!-- Order Details -->
+                    <div class="order-details">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Order Number</h6>
+                                <p class="fw-bold mb-0">#{{ order.id }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Order Date</h6>
+                                <p class="fw-bold mb-0">{{ order.created_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Total Amount</h6>
+                                <p class="h4 text-success mb-0">${{ "%.2f"|format(order.total_amount) }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Payment Status</h6>
+                                <span class="badge bg-success fs-6">Completed</span>
+                            </div>
+                        </div>
+
+                        {% if order.payment_id %}
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-2">Payment ID</h6>
+                                <p class="small text-muted mb-0">{{ order.payment_id }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-details">
+                        <h5 class="mb-3">Order Items</h5>
+                        {% for item in order.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ item.product.image_url or 'https://via.placeholder.com/60' }}" 
+                                     class="img-thumbnail me-3" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="text-start">
+                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                    <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <p class="fw-bold mb-0">₹{{ "%.2f"|format(item.price * item.quantity) }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Next Steps -->
+                    <div class="alert alert-info text-start">
+                        <h6>
+                            <i class="fas fa-info-circle"></i>
+                            What Happens Next?
+                        </h6>
+                        <ul class="mb-0">
+                            <li>You will receive an order confirmation email shortly</li>
+                            <li>Your order will be processed within 24 hours</li>
+                            <li>Shipping typically takes 3-5 business days</li>
+                            <li>You can track your order in "My Orders" section</li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-3 d-md-flex justify-content-center mt-4">
+                        <a href="{{ url_for('orders') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-list"></i> View My Orders
+                        </a>
+                        <a href="{{ url_for('shop') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-shopping-bag"></i> Continue Shopping
+                        </a>
+                    </div>
+
+                    <!-- Download Invoice -->
+                    <div class="mt-4">
+                        <a href="#" class="text-primary text-decoration-none">
+                            <i class="fas fa-download"></i> Download Invoice
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="text-center mt-4">
+                    <p class="text-white">
+                        Need help? 
+                        <a href="#" class="text-white fw-bold">Contact Support</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Create confetti effect
+    function createConfetti() {
+        const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }, i * 30);
+        }
+    }
+    
+    // Trigger confetti on page load
+    window.addEventListener('load', createConfetti);
+</script>
+{% endblock %}
