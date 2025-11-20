@@ -1,0 +1,25 @@
+<!-- Search Bar Component -->
+<div class="search-container mb-4">
+    <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input type="text" 
+               class="form-control border-start-0" 
+               id="searchProducts" 
+               placeholder="Search products by name or category..."
+               aria-label="Search products">
+        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+// Clear search functionality
+document.getElementById('clearSearch')?.addEventListener('click', function() {
+    const searchInput = document.getElementById('searchProducts');
+    searchInput.value = '';
+    searchInput.dispatchEvent(new Event('input'));
+});
+</script>

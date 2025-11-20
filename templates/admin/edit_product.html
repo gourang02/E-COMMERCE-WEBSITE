@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Product - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-edit"></i> Edit Product</h1>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Products
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_edit_product', id=product.id) }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ product.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="sunglasses" {% if product.category == 'sunglasses' %}selected{% endif %}>Sunglasses</option>
+                                <option value="eyeglasses" {% if product.category == 'eyeglasses' %}selected{% endif %}>Eyeglasses</option>
+                                <option value="contact-lenses" {% if product.category == 'contact-lenses' %}selected{% endif %}>Contact Lenses</option>
+                                <option value="accessories" {% if product.category == 'accessories' %}selected{% endif %}>Accessories</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price (₹)</label>
+                            <input type="number" class="form-control" id="price" name="price" 
+                                   step="0.01" min="0" value="{{ '%.2f'|format(product.price) }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="stock" name="stock" 
+                                   min="0" value="{{ product.stock }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="image_url" class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="image_url" name="image_url" 
+                                   value="{{ product.image_url or '' }}">
+                            {% if product.image_url %}
+                            <div class="mt-2">
+                                <img src="{{ product.image_url }}" alt="Product Image" class="img-thumbnail" style="max-height: 200px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                     rows="8" style="resize: none;">{{ product.description or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('admin_products') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add any JavaScript specific to the edit product page here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Preview image when URL changes
+        const imageUrlInput = document.getElementById('image_url');
+        if (imageUrlInput) {
+            imageUrlInput.addEventListener('change', function() {
+                const preview = this.nextElementSibling;
+                if (preview && preview.tagName === 'DIV') {
+                    const img = preview.querySelector('img');
+                    if (img) {
+                        img.src = this.value;
+                        img.alt = 'Product Image Preview';
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

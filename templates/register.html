@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Optical Shop{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">
+                        <i class="fas fa-user-plus"></i> Create Your Account
+                    </h2>
+                    <p class="text-center text-muted mb-4">Join us to explore our exclusive eyewear collection</p>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                        <div class="row">
+                            <!-- Full Name -->
+<div class="col-md-6 mb-3">
+    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="fas fa-user"></i>
+        </span>
+        <input type="text" class="form-control" id="name" name="name" 
+               placeholder="Enter your full name" required minlength="3">
+    </div>
+    <small class="text-muted">At least 3 characters</small>
+</div>
+
+<!-- Username (ADD THIS) -->
+<div class="col-md-6 mb-3">
+    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="fas fa-user-tag"></i>
+        </span>
+        <input type="text" class="form-control" id="username" name="username" 
+               placeholder="Choose a username" required minlength="3" pattern="[a-zA-Z0-9_]+">
+    </div>
+    <small class="text-muted">Only letters, numbers and underscore</small>
+</div>
+                            <!-- Phone Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           placeholder="Enter your phone number" required pattern="[0-9]{10}">
+                                </div>
+                                <small class="text-muted">10 digit mobile number</small>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="Enter your email" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Enter your password" required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">At least 6 characters</small>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                           placeholder="Re-enter your password" required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                                <textarea class="form-control" id="address" name="address" rows="2" 
+                                          placeholder="Enter your address"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- City -->
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-city"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="city" name="city" 
+                                           placeholder="Enter your city">
+                                </div>
+                            </div>
+
+                            <!-- Pincode -->
+                            <div class="col-md-6 mb-3">
+                                <label for="pincode" class="form-label">Pincode</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mail-bulk"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="pincode" name="pincode" 
+                                           placeholder="Enter pincode" pattern="[0-9]{6}">
+                                </div>
+                                <small class="text-muted">6 digit pincode</small>
+                            </div>
+                        </div>
+
+                        <!-- Gender -->
+                        <div class="mb-3">
+                            <label class="form-label">Gender</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gender" id="male" value="male">
+                                    <label class="form-check-label" for="male">
+                                        <i class="fas fa-mars"></i> Male
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                                    <label class="form-check-label" for="female">
+                                        <i class="fas fa-venus"></i> Female
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gender" id="other" value="other">
+                                    <label class="form-check-label" for="other">
+                                        <i class="fas fa-genderless"></i> Other
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="mb-3">
+                            <label for="dob" class="form-label">Date of Birth</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                                <input type="date" class="form-control" id="dob" name="dob">
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a> <span class="text-danger">*</span>
+                            </label>
+                        </div>
+
+                        <!-- Newsletter -->
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="newsletter" name="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                <i class="fas fa-envelope-open-text"></i> Subscribe to newsletter for exclusive offers and updates
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100 mb-3 py-2">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+
+                        <!-- Login Link -->
+                        <div class="text-center">
+                            <p class="mb-0">Already have an account? 
+                                <a href="{{ url_for('login') }}" class="fw-bold">Login here</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Social Registration (Optional) -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body p-4">
+                    <p class="text-center text-muted mb-3">Or register with</p>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-danger w-100">
+                                <i class="fab fa-google"></i> Google
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-primary w-100">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-dark w-100">
+                                <i class="fab fa-apple"></i> Apple
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Acceptance of Terms</h6>
+                <p>By accessing and using this optical shop website, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                
+                <h6>2. Use License</h6>
+                <p>Permission is granted to temporarily download one copy of the materials on Optical Shop's website for personal, non-commercial transitory viewing only.</p>
+                
+                <h6>3. Product Information</h6>
+                <p>We strive to provide accurate product information, but we do not warrant that product descriptions or other content is accurate, complete, reliable, current, or error-free.</p>
+                
+                <h6>4. Privacy Policy</h6>
+                <p>Your use of our website is also governed by our Privacy Policy. Please review our Privacy Policy, which also governs the site and informs users of our data collection practices.</p>
+                
+                <h6>5. User Account</h6>
+                <p>You are responsible for maintaining the confidentiality of your account and password and for restricting access to your computer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Information We Collect</h6>
+                <p>We collect information that you provide directly to us, including your name, email address, phone number, and shipping address.</p>
+                
+                <h6>How We Use Your Information</h6>
+                <p>We use the information we collect to process your orders, communicate with you, and improve our services.</p>
+                
+                <h6>Information Sharing</h6>
+                <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent.</p>
+                
+                <h6>Data Security</h6>
+                <p>We implement security measures to protect your personal information from unauthorized access and disclosure.</p>
+                
+                <h6>Contact Us</h6>
+                <p>If you have any questions about this Privacy Policy, please contact us at privacy@opticalshop.com</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password Toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const password = document.getElementById('password');
+        const icon = this.querySelector('i');
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        const confirmPassword = document.getElementById('confirm_password');
+        const icon = this.querySelector('i');
+        if (confirmPassword.type === 'password') {
+            confirmPassword.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            confirmPassword.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    // Form Validation
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+        
+        return true;
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Raunak Optics - Premium Eyewear{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #0056b3;
+            --amazon-orange: #FF9900;
+            --amazon-dark: #131921;
+            --amazon-light: #232F3E;
+            --amazon-yellow: #FFD814;
+            --amazon-yellow-hover: #F7CA00;
+            --amazon-orange-hover: #ff8c00;
+            --text-dark: #0F1111;
+            --text-light: #565959;
+            --border-color: #DDD;
+            --bg-light: #EAEDED;
+            --success: #007600;
+            --danger: #B12704;
+        }
+        
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            color: var(--text-dark);
+            background-color: #f3f3f3;
+            line-height: 1.6;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(to bottom, var(--amazon-dark), var(--amazon-light));
+            padding: 0.5rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: white !important;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        /* Buttons */
+        .btn-amazon {
+            background: var(--amazon-yellow);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-amazon:hover {
+            background: var(--amazon-yellow-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .btn-orange {
+            background: var(--amazon-orange);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-orange:hover {
+            background: var(--amazon-orange-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Cards */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        
+        /* Headings */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--amazon-dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        .footer-links h5 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: #DDD;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--amazon-orange);
+            text-decoration: none;
+        }
+        
+        /* Alert Messages */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Form Controls */
+        .form-control:focus {
+            border-color: var(--amazon-orange);
+            box-shadow: 0 0 0 0.25rem rgba(255, 153, 0, 0.25);
+        }
+        
+        /* Price Styling */
+        .price {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        /* Stock Status */
+        .in-stock {
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        .out-of-stock {
+            color: var(--danger);
+            font-weight: 500;
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        .hero-section p.lead {
+            font-size: 1.8rem;
+            margin-bottom: 2.5rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            font-weight: 300;
+        }
+        .hero-section .btn {
+            padding: 12px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .hero-section .btn-light {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 2px solid transparent;
+        }
+        .hero-section .btn-light:hover {
+            background-color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: #fff;
+        }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+</head>
+<body>
+    <!-- Hero Section with Background Image -->
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-4">Welcome to Raunak Optics</h1>
+            <p class="lead mb-4">Discover our premium collection of eyewear for every style and need</p>
+            <a href="{{ url_for('shop') }}" class="btn btn-warning btn-lg">Shop Now</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="position: absolute; top: 0; left: 0; right: 0; z-index: 1000;">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Raunak Optics" height="40" class="d-inline-block align-text-top me-2">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('shop') }}">Shop</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('orders') }}">My Orders</a>
+                        </li>
+                        <li class="nav-item position-relative">
+                            <a class="nav-link" href="{{ url_for('cart') }}">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                                {% if session.get('cart') %}
+                                    <span class="cart-badge">{{ session.get('cart')|length }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-glasses"></i> RAUNAK OPTICALS</h5>
+                    <p>Your trusted optical store for quality eyewear.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('shop') }}" class="text-white text-decoration-none">Shop</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <p><i class="fas fa-envelope"></i> info@opticshop.com</p>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="text-center">
+                <p>&copy; 2024 OpticShop. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lazy Loading Images -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lazy load images
+            const lazyImages = [].slice.call(document.querySelectorAll('img.lazy'));
+            
+            if ('IntersectionObserver' in window) {
+                let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            let lazyImage = entry.target;
+                            lazyImage.src = lazyImage.dataset.src;
+                            lazyImage.classList.remove('lazy');
+                            lazyImage.classList.add('lazy-loaded');
+                            lazyImageObserver.unobserve(lazyImage);
+                            
+                            // Hide the placeholder when image is loaded
+                            const placeholder = lazyImage.previousElementSibling;
+                            if (placeholder && placeholder.classList.contains('image-placeholder')) {
+                                placeholder.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+
+                lazyImages.forEach(function(lazyImage) {
+                    lazyImageObserver.observe(lazyImage);
+                });
+            }
+            
+            // Show loading state for buttons on form submission
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.classList.add('btn-loading');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
