@@ -97,6 +97,8 @@ class Order(db.Model):
     city = db.Column(db.String(100))
     pincode = db.Column(db.String(20))
     phone = db.Column(db.String(20))
+    delivery_option = db.Column(db.String(50), default='Standard')
+    delivery_charge = db.Column(db.Float, default=0.0)
     # Relationship with OrderItem
     items = db.relationship('OrderItem', backref='order', lazy=True)
 class OrderItem(db.Model):
