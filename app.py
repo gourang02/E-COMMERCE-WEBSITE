@@ -16,9 +16,15 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure app
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-# Use SQLite for development
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+
+# Database configuration
+if os.environ.get('DATABASE_URL'):
+    # Use PostgreSQL if DATABASE_URL is set (Neon/Vercel)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL').replace('postgres://', 'postgresql://', 1)
+else:
+    # Development fallback - Use SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
@@ -43,7 +49,19 @@ RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', 'your_razorpay_key_id')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', 'your_razorpay_key_secret')
 
 # Initialize Razorpay client
-razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET and RAZORPAY_KEY_ID != 'your_razorpay_key_id':
+    try:
+        razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        RAZORPAY_ENABLED = True
+        print("Razorpay enabled")
+    except Exception as e:
+        print(f"Razorpay initialization failed: {e}")
+        razorpay_client = None
+        RAZORPAY_ENABLED = False
+else:
+    razorpay_client = None
+    RAZORPAY_ENABLED = False
+    print("Razorpay disabled - using mock mode")
 
 # Database Models
 class User(UserMixin, db.Model):
@@ -346,30 +364,35 @@ def checkout():
             return redirect(url_for('checkout'))
 
     # For Razorpay payment
-    try:
-        # Create order in Razorpay
-        razorpay_order = razorpay_client.order.create({
-            'amount': int(total * 100),  # Convert to paise
-            'currency': 'INR',
-            'payment_capture': '1',  # Auto capture payment
-            'notes': {
-                'user_id': current_user.id,
-                'email': current_user.email,
-                'order_type': 'ecommerce_order'
-            }
-        })
-        
-        razorpay_order_id = razorpay_order['id']
-    except Exception as e:
-        app.logger.error(f"Error creating Razorpay order: {str(e)}")
-        razorpay_order_id = None
+    if RAZORPAY_ENABLED and razorpay_client:
+        try:
+            # Create order in Razorpay
+            razorpay_order = razorpay_client.order.create({
+                'amount': int(total * 100),  # Convert to paise
+                'currency': 'INR',
+                'payment_capture': '1',  # Auto capture payment
+                'notes': {
+                    'user_id': current_user.id,
+                    'email': current_user.email,
+                    'order_type': 'ecommerce_order'
+                }
+            })
+            
+            razorpay_order_id = razorpay_order['id']
+        except Exception as e:
+            app.logger.error(f"Error creating Razorpay order: {str(e)}")
+            razorpay_order_id = None
+    else:
+        # Mock mode - generate a fake order ID
+        razorpay_order_id = f"mock_order_{current_user.id}_{int(datetime.utcnow().timestamp())}"
+        print(f"Mock payment mode - generated order ID: {razorpay_order_id}")
     
     return render_template('checkout.html', 
                          products=products, 
                          total=total,
                          cart_items=cart_items,
                          razorpay_key=RAZORPAY_KEY_ID,
-                         razorpay_order_id=razorpay_order_id if 'razorpay_order_id' in locals() else None,
+                         razorpay_order_id=razorpay_order_id,
                          amount=int(total * 100))  # Amount in paise
 
 @app.route('/verify_payment', methods=['POST'])
@@ -378,18 +401,36 @@ def verify_payment():
     if 'cart' not in session or not session['cart']:
         return jsonify({'error': 'Your cart is empty'}), 400
     
-    data = request.get_json()
-    
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid request data'}), 400
+            
         # Verify payment signature
         params_dict = {
-            'razorpay_order_id': data['razorpay_order_id'],
-            'razorpay_payment_id': data['razorpay_payment_id'],
-            'razorpay_signature': data['razorpay_signature']
+            'razorpay_order_id': data.get('razorpay_order_id'),
+            'razorpay_payment_id': data.get('razorpay_payment_id'),
+            'razorpay_signature': data.get('razorpay_signature')
         }
         
+        # Check if all required fields are present
+        if not all(params_dict.values()):
+            return jsonify({'error': 'Missing payment details'}), 400
+        
         # Verify the payment signature
-        razorpay_client.utility.verify_payment_signature(params_dict)
+        try:
+            if RAZORPAY_ENABLED and razorpay_client:
+                razorpay_client.utility.verify_payment_signature(params_dict)
+            else:
+                # Mock mode - skip signature verification
+                print(f"Mock payment verification for order: {params_dict['razorpay_order_id']}")
+        except Exception as e:
+            if RAZORPAY_ENABLED and razorpay_client:
+                app.logger.error(f"Payment signature verification failed: {str(e)}")
+                return jsonify({'error': 'Payment verification failed'}), 400
+            else:
+                # Mock mode - continue despite verification error
+                print(f"Mock payment verification bypassed: {str(e)}")
         
         # If verification is successful, process the order
         cart_items = session['cart']
@@ -421,10 +462,10 @@ def verify_payment():
                 total_amount=total,
                 status='paid',
                 payment_id=data['razorpay_payment_id'],
-                shipping_address=request.form.get('address', 'N/A'),
-                city=request.form.get('city', 'N/A'),
-                pincode=request.form.get('pincode', 'N/A'),
-                phone=request.form.get('phone', 'N/A')
+                shipping_address=data.get('address', 'N/A'),
+                city=data.get('city', 'N/A'),
+                pincode=data.get('pincode', 'N/A'),
+                phone=data.get('phone', 'N/A')
             )
             db.session.add(order)
             db.session.flush()
@@ -644,7 +685,10 @@ def admin_users():
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users)
 
+# This is needed for Vercel
+app = app
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

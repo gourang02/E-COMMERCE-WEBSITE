@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Sales Dashboard - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-dashboard {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        min-height: 100vh;
+        padding: 30px 0;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1f2937;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .recent-orders {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .top-products {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .product-rank {
+        width: 30px;
+        height: 30px;
+        background: #2563eb;
+        color: white;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.875rem;
+    }
+    
+    .product-rank.gold { background: #f59e0b; }
+    .product-rank.silver { background: #6b7280; }
+    .product-rank.bronze { background: #d97706; }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="text-white mb-1">
+                    <i class="fas fa-chart-line"></i> Quick Sales Dashboard
+                </h1>
+                <p class="text-white-50 mb-0">Real-time sales analytics and performance</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dbeafe;">
+                        <i class="fas fa-dollar-sign" style="color: #2563eb;"></i>
+                    </div>
+                    <div class="stat-value">${{ "%.2f"|format(total_sales) }}</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up"></i> From all completed orders
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dcfce7;">
+                        <i class="fas fa-shopping-cart" style="color: #10b981;"></i>
+                    </div>
+                    <div class="stat-value">{{ total_orders }}</div>
+                    <div class="stat-label">Total Orders</div>
+                    <div class="mt-2">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle"></i> Successfully completed
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef3c7;">
+                        <i class="fas fa-chart-bar" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="stat-value">${{ "%.2f"|format(total_sales / total_orders if total_orders > 0 else 0) }}</div>
+                    <div class="stat-label">Average Order Value</div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Per transaction
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Recent Orders -->
+            <div class="col-lg-7 mb-4">
+                <div class="recent-orders">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">
+                            <i class="fas fa-clock text-primary"></i>
+                            Recent Orders
+                        </h3>
+                        <span class="badge bg-primary">Last 50</span>
+                    </div>
+
+                    {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders[:20] %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar bg-primary text-white rounded-circle me-2" 
+                                                 style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                                {{ order.user.username[0].upper() }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ order.user.username }}</div>
+                                                <small class="text-muted">{{ order.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.created_at.strftime('%b %d, %Y') }}</small><br>
+                                        <small class="text-muted">{{ order.created_at.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">${{ "%.2f"|format(order.total_amount) }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ order.items|length }} items</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> Completed
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No orders yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Top Products -->
+            <div class="col-lg-5 mb-4">
+                <div class="top-products">
+                    <h3 class="mb-4">
+                        <i class="fas fa-trophy text-warning"></i>
+                        Top Selling Products
+                    </h3>
+
+                    {% if top_products %}
+                    <div class="list-group list-group-flush">
+                        {% for product in top_products[:10] %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex align-items-center">
+                                <span class="product-rank {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                                    {{ loop.index }}
+                                </span>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">{{ product.name }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-shopping-bag"></i>
+                                            {{ product.total_sold }} sold
+                                        </small>
+                                        <strong class="text-success">
+                                            ${{ "%.2f"|format(product.revenue) }}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No sales data yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="recent-orders">
+                    <h3 class="mb-4">
+                        <i class="fas fa-bolt text-primary"></i>
+                        Quick Actions
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary w-100 p-3">
+                                <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                                Add New Product
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_products') }}" class="btn btn-info w-100 p-3">
+                                <i class="fas fa-box fa-2x mb-2 d-block"></i>
+                                Manage Products
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-success w-100 p-3" onclick="window.print()">
+                                <i class="fas fa-file-export fa-2x mb-2 d-block"></i>
+                                Export Report
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('shop') }}" class="btn btn-secondary w-100 p-3">
+                                <i class="fas fa-eye fa-2x mb-2 d-block"></i>
+                                View Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 30 seconds
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+    
+    // Show notification on page load
+    console.log('Dashboard loaded successfully');
+</script>
+{% endblock %}

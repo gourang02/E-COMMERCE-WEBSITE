@@ -46,3 +46,4 @@ instance/
 # Local development
 .DS_Store
 Thumbs.db
+.vercel
